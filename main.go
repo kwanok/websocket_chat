@@ -1,10 +1,9 @@
 package main
 
 import (
-	"github.com/gorilla/pat"
+	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/urfave/negroni"
-	"log"
 	"net/http"
 )
 
@@ -19,39 +18,33 @@ type Message struct {
 	Data interface{} `json:"data"`
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func socketHandler(w http.ResponseWriter, r *http.Request) {
+	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println(err)
+		fmt.Println("Failed to set websocket upgrade: %+v", err)
 		return
 	}
+
 	for {
-		m := &Message{}
-		err := conn.ReadJSON(m)
+		t, msg, err := conn.ReadMessage()
 		if err != nil {
-			log.Println(err)
-			return
+			break
 		}
-		data := (*m).Data
-		user := (*m).User
-
-		(*m).Data = user + " : " + data.(string)
-
-		err = conn.WriteJSON(m)
-		if err != nil {
-			log.Println(err)
-			return
-		}
+		conn.WriteMessage(t, msg)
 	}
 }
-func main() {
-	mux := pat.New()
-	mux.Get("/chat", handler)
-	n := negroni.Classic()
-	n.UseHandler(mux)
 
-	err := http.ListenAndServe(":3000", n)
-	if err != nil {
-		return
-	}
+func main() {
+	r := gin.Default()
+
+	r.GET("/", func(c *gin.Context) {
+		c.String(200, "We got Gin")
+	})
+
+	r.GET("/ws", func(c *gin.Context) {
+		socketHandler(c.Writer, c.Request)
+	})
+
+	r.Run()
 }
