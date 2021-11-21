@@ -1,14 +1,13 @@
 package server
 
 import (
-	"database/sql"
 	"fmt"
+	"friday/endpoints/admin"
+	"friday/tools"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
-	"log"
 	"net/http"
-	"os"
 )
 
 type Message struct {
@@ -48,70 +47,19 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type DatabaseInfo struct {
-	Name     string
-	Host     string
-	Password string
-	Root     string
-}
-
-func initDatabase() *sql.DB {
-
-	databaseInfo := DatabaseInfo{
-		os.Getenv("DB_NAME"),
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_ROOT"),
-	}
-
-	db, err := sql.Open("mysql", getSourceName(databaseInfo))
-	errorHandler(err)
-
-	return db
-}
-
-func errorHandler(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func getSourceName(db DatabaseInfo) string {
-	return db.Root + ":" + db.Password + "@tcp(" + db.Host + ":3306)/" + db.Name
-}
-
 func Routes(r *gin.Engine) {
 	err := godotenv.Load(".env")
-	errorHandler(err)
-
-	db := initDatabase()
-	defer db.Close()
+	tools.ErrorHandler(err)
 
 	r.GET("/", func(c *gin.Context) {
 		c.String(200, "We got Gin")
 	})
 
-	admin := r.Group("/admin")
-	admin.Use()
+	rAdmin := r.Group("/admin")
+	rAdmin.Use()
 	{
-		admin.GET("/users", func(c *gin.Context) {
-			var users []User
-
-			rows, err := db.Query("SELECT * FROM users")
-			errorHandler(err)
-
-			defer rows.Close()
-
-			for rows.Next() {
-				var user User
-				err := rows.Scan(&user.Id, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt)
-				if err != nil {
-					log.Fatal(err)
-				}
-				users = append(users, user)
-			}
-
-			c.JSON(200, users)
+		rAdmin.GET("/users", func(c *gin.Context) {
+			admin.GetUsers()
 		})
 	}
 

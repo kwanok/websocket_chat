@@ -1,12 +1,17 @@
-module Friday
+module friday
 
 go 1.17
 
 require (
 	github.com/gin-gonic/gin v1.7.4
-	github.com/go-sql-driver/mysql v1.6.0
-	github.com/gorilla/websocket v1.4.2
-	github.com/joho/godotenv v1.4.0
+	friday/server v0.0.0
+	friday/tools v0.0.0
+)
+
+replace (
+	friday/server => ./server
+	friday/tools => ./tools
+	friday/endpoints/admin => ./endpoints/admin
 )
 
 require (
@@ -14,7 +19,10 @@ require (
 	github.com/go-playground/locales v0.13.0 // indirect
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/go-playground/validator/v10 v10.4.1 // indirect
+	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/golang/protobuf v1.3.3 // indirect
+	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/joho/godotenv v1.4.0 // indirect
 	github.com/json-iterator/go v1.1.9 // indirect
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect

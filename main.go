@@ -1,15 +1,17 @@
 package main
 
 import (
-	"Friday/server"
+	"friday/server"
+	"friday/tools"
 	"github.com/gin-gonic/gin"
-	_ "github.com/go-sql-driver/mysql"
 )
 
 func main() {
 	r := gin.Default()
 
+	server.InitDB()
 	server.Routes(r)
 
-	r.Run()
+	err := r.Run()
+	tools.ErrorHandler(err)
 }
