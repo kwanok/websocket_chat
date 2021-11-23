@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"friday/tools"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/joho/godotenv"
 	"os"
 )
 
@@ -24,7 +25,10 @@ func getSourceName(db DatabaseInfo) string {
 	return db.Root + ":" + db.Password + "@tcp(" + db.Host + ":3306)/" + db.Name
 }
 
-func InitDB() {
+func InitDB() string {
+	err := godotenv.Load(".env")
+	tools.ErrorHandler(err)
+
 	databaseInfo := DatabaseInfo{
 		os.Getenv("DB_NAME"),
 		os.Getenv("DB_HOST"),
@@ -36,4 +40,6 @@ func InitDB() {
 	tools.ErrorHandler(err)
 
 	DBCon = db
+
+	return "InitDB Success"
 }

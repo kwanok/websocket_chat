@@ -1,4 +1,4 @@
-package server
+package routes
 
 import (
 	"fmt"
@@ -9,21 +9,6 @@ import (
 	"github.com/joho/godotenv"
 	"net/http"
 )
-
-type Message struct {
-	Type      string `json:"type"`
-	User      User   `json:"user"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
-}
-
-type User struct {
-	Id        int    `json:"id"`
-	Name      string `json:"name"`
-	Email     string `json:"email"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
-}
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -59,7 +44,7 @@ func Routes(r *gin.Engine) {
 	rAdmin.Use()
 	{
 		rAdmin.GET("/users", func(c *gin.Context) {
-			admin.GetUsers()
+			admin.GetUsers(c)
 		})
 	}
 
