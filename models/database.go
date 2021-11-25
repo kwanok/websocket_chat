@@ -1,8 +1,8 @@
-package server
+package models
 
 import (
 	"database/sql"
-	"friday/tools"
+	"friday/utils"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 	"os"
@@ -27,7 +27,7 @@ func getSourceName(db DatabaseInfo) string {
 
 func InitDB() string {
 	err := godotenv.Load(".env")
-	tools.ErrorHandler(err)
+	utils.FatalError{Error: err}.Handle()
 
 	databaseInfo := DatabaseInfo{
 		os.Getenv("DB_NAME"),
@@ -37,7 +37,7 @@ func InitDB() string {
 	}
 
 	db, err := sql.Open("mysql", getSourceName(databaseInfo))
-	tools.ErrorHandler(err)
+	utils.FatalError{Error: err}.Handle()
 
 	DBCon = db
 

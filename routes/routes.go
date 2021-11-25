@@ -3,7 +3,8 @@ package routes
 import (
 	"fmt"
 	"friday/endpoints/admin"
-	"friday/tools"
+	"friday/endpoints/auth"
+	"friday/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
@@ -25,27 +26,31 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 
 	for {
 		t, msg, err := conn.ReadMessage()
-		if err != nil {
-			break
-		}
-		conn.WriteMessage(t, msg)
+		utils.FatalError{Error: err}.Handle()
+
+		err = conn.WriteMessage(t, msg)
+		utils.FatalError{Error: err}.Handle()
 	}
 }
 
 func Routes(r *gin.Engine) {
 	err := godotenv.Load(".env")
-	tools.ErrorHandler(err)
+	utils.FatalError{Error: err}.Handle()
 
 	r.GET("/", func(c *gin.Context) {
 		c.String(200, "We got Gin")
 	})
 
-	rAdmin := r.Group("/admin")
-	rAdmin.Use()
+	adminGroup := r.Group("/admin")
+	adminGroup.Use()
 	{
-		rAdmin.GET("/users", func(c *gin.Context) {
-			admin.GetUsers(c)
-		})
+		adminGroup.GET("/users", func(c *gin.Context) { admin.GetUsers(c) })
+	}
+
+	authGroup := r.Group("/auth")
+	{
+		authGroup.GET("/login", func(c *gin.Context) { auth.Login(c) })
+		authGroup.POST("/register", func(c *gin.Context) { auth.Register(c) })
 	}
 
 	r.GET("/ws", func(c *gin.Context) {
