@@ -1,18 +1,16 @@
-package models
+package server
 
 import (
 	"database/sql"
-	"friday/utils"
+	"friday/server/utils"
+	"github.com/go-redis/redis/v7"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 	"os"
 )
 
-var (
-	// DBCon is the connection handle
-	// for the database
-	DBCon *sql.DB
-)
+var DBCon *sql.DB
+var RedisClient *redis.Client
 
 type DatabaseInfo struct {
 	Name     string
@@ -29,6 +27,28 @@ func InitDB() string {
 	err := godotenv.Load(".env")
 	utils.FatalError{Error: err}.Handle()
 
+	go initMysql()
+	go initRedis()
+
+	return "InitDB Success"
+}
+
+func initRedis() {
+	//Initializing redis
+	dsn := os.Getenv("REDIS_DSN")
+	if len(dsn) == 0 {
+		dsn = "localhost:6379"
+	}
+	RedisClient = redis.NewClient(&redis.Options{
+		Addr: dsn, //redis port
+	})
+	_, err := RedisClient.Ping().Result()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func initMysql() {
 	databaseInfo := DatabaseInfo{
 		os.Getenv("DB_NAME"),
 		os.Getenv("DB_HOST"),
@@ -40,6 +60,4 @@ func InitDB() string {
 	utils.FatalError{Error: err}.Handle()
 
 	DBCon = db
-
-	return "InitDB Success"
 }

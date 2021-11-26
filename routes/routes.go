@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"friday/endpoints/admin"
 	"friday/endpoints/auth"
-	"friday/utils"
+	"friday/middlewares"
+	"friday/server/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
@@ -42,15 +43,17 @@ func Routes(r *gin.Engine) {
 	})
 
 	adminGroup := r.Group("/admin")
-	adminGroup.Use()
+	adminGroup.Use(middlewares.IsAuthorized)
 	{
-		adminGroup.GET("/users", func(c *gin.Context) { admin.GetUsers(c) })
+		adminGroup.GET("/users", admin.GetUsers)
 	}
 
 	authGroup := r.Group("/auth")
 	{
-		authGroup.GET("/login", func(c *gin.Context) { auth.Login(c) })
-		authGroup.POST("/register", func(c *gin.Context) { auth.Register(c) })
+		authGroup.POST("/register", auth.Register)
+		authGroup.POST("/login", auth.Login)
+		authGroup.POST("/logout", middlewares.IsAuthorized, auth.Logout)
+		authGroup.POST("/refresh", auth.Refresh)
 	}
 
 	r.GET("/ws", func(c *gin.Context) {

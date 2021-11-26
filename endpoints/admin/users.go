@@ -1,8 +1,8 @@
 package admin
 
 import (
-	"friday/models"
-	"friday/utils"
+	"friday/server/models"
+	"friday/server/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )

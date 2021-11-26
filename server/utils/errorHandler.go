@@ -39,6 +39,6 @@ func (he HttpError) Handle(messages ...string) {
 			he.Context.JSON(he.Status, messages[0])
 		}
 
-		return
+		he.Context.Abort()
 	}
 }

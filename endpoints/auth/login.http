@@ -1,9 +1,0 @@
-GET http://localhost:8080/auth/login
-Content-Type: application/json
-
-{
-  "email": "aaaa@gmail.com",
-  "password": "rhksdhr2!"
-}
-
-###
