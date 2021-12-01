@@ -3,7 +3,7 @@ package routes
 import (
 	"friday/endpoints/admin"
 	"friday/endpoints/auth"
-	"friday/endpoints/ws"
+	"friday/endpoints/websocket"
 	"friday/middlewares"
 	"friday/server/utils"
 	"github.com/gin-gonic/gin"
@@ -13,6 +13,9 @@ import (
 func Routes(r *gin.Engine) {
 	err := godotenv.Load(".env")
 	utils.FatalError{Error: err}.Handle()
+
+	pool := websocket.NewPool()
+	go pool.Start()
 
 	r.GET("/", func(c *gin.Context) {
 		c.String(200, "We got Gin")
@@ -32,7 +35,7 @@ func Routes(r *gin.Engine) {
 		authGroup.POST("/refresh", auth.Refresh)
 	}
 
-	r.GET("/ws", func(c *gin.Context) {
-		ws.SocketHandler(c.Writer, c.Request)
+	r.GET("/websocket", func(c *gin.Context) {
+		websocket.SocketHandler(pool, c.Writer, c.Request)
 	})
 }

@@ -1,8 +1,7 @@
-package ws
+package websocket
 
 import (
 	"fmt"
-	"friday/server/utils"
 	"github.com/gorilla/websocket"
 	"net/http"
 )
@@ -12,7 +11,7 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-func SocketHandler(w http.ResponseWriter, r *http.Request) {
+func SocketHandler(pool *Pool, w http.ResponseWriter, r *http.Request) {
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -20,11 +19,15 @@ func SocketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for {
-		t, msg, err := conn.ReadMessage()
-		utils.FatalError{Error: err}.Handle()
-
-		err = conn.WriteMessage(t, msg)
-		utils.FatalError{Error: err}.Handle()
+	client := &Client{
+		ID:   "fejfjeffef",
+		Conn: conn,
+		Pool: pool,
 	}
+
+	fmt.Println("client pool:", client.ID)
+	fmt.Println("client ID:", &client.ID)
+
+	pool.Register <- client
+	client.Read()
 }
