@@ -3,6 +3,7 @@ package routes
 import (
 	"friday/endpoints/admin"
 	"friday/endpoints/auth"
+	"friday/endpoints/post"
 	"friday/endpoints/websocket"
 	"friday/middlewares"
 	"friday/server/utils"
@@ -34,6 +35,8 @@ func Routes(r *gin.Engine) {
 		authGroup.POST("/logout", middlewares.IsAuthorized, auth.Logout)
 		authGroup.POST("/refresh", auth.Refresh)
 	}
+
+	r.GET("posts", post.GetPosts)
 
 	r.GET("/websocket", func(c *gin.Context) {
 		websocket.SocketHandler(pool, c.Writer, c.Request)
