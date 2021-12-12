@@ -15,7 +15,7 @@ func Routes(r *gin.Engine) {
 	err := godotenv.Load(".env")
 	utils.FatalError{Error: err}.Handle()
 
-	wsServer := websocket.NewWebsocketServer()
+	wsServer := websocket.NewServer()
 	go wsServer.Run()
 
 	r.GET("/", func(c *gin.Context) {
@@ -39,6 +39,6 @@ func Routes(r *gin.Engine) {
 	r.GET("posts", post.GetPosts)
 
 	r.GET("/websocket", func(c *gin.Context) {
-		websocket.ServeWs(wsServer, c.Writer, c.Request)
+		websocket.Handler(wsServer, c.Writer, c.Request)
 	})
 }
