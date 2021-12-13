@@ -6,17 +6,27 @@ import (
 	"net/http"
 )
 
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
+
 type Server struct {
-	Clients    map[*Client]bool
-	Rooms      map[*Room]bool
+	clients    map[*Client]bool
+	rooms      map[*Room]bool
 	register   chan *Client
 	unregister chan *Client
 	broadcast  chan []byte
 }
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
+func NewServer() *Server {
+	return &Server{
+		clients:    make(map[*Client]bool),
+		register:   make(chan *Client),
+		unregister: make(chan *Client),
+		broadcast:  make(chan []byte),
+		rooms:      make(map[*Room]bool),
+	}
 }
 
 func Handler(wsServer *Server, w http.ResponseWriter, r *http.Request) {
@@ -33,6 +43,7 @@ func Handler(wsServer *Server, w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := newClient(conn, wsServer, name[0])
+	log.Println(client.GetName())
 
 	go client.writePump()
 	go client.readPump()
@@ -40,22 +51,15 @@ func Handler(wsServer *Server, w http.ResponseWriter, r *http.Request) {
 	wsServer.register <- client
 }
 
-func NewServer() *Server {
-	return &Server{
-		Clients:    make(map[*Client]bool),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
-	}
-}
-
 func (server *Server) Run() {
 	for {
 		select {
 		case client := <-server.register:
 			server.registerClient(client)
-
 		case client := <-server.unregister:
 			server.unregisterClient(client)
+		case message := <-server.broadcast:
+			server.broadcastToClients(message)
 		}
 	}
 }
@@ -64,19 +68,21 @@ func (server *Server) Run() {
 
 //registerClient 서버에 클라이언트를 등록
 func (server *Server) registerClient(client *Client) {
-	server.Clients[client] = true
+	server.notifyClientJoined(client)
+	server.listOnlineClients(client)
+	server.clients[client] = true
 }
 
 //unregisterClient 서버에서 클라이언트를 등록 해제
 func (server *Server) unregisterClient(client *Client) {
-	if _, ok := server.Clients[client]; ok {
-		delete(server.Clients, client)
+	if _, ok := server.clients[client]; ok {
+		delete(server.clients, client)
 	}
 }
 
-//broadcastToClient 서버에 있는 클라이언트들에게 브로드캐스팅
-func (server *Server) broadcastToClient(message []byte) {
-	for client := range server.Clients {
+//broadcastToClients 서버에 있는 클라이언트들에게 브로드캐스팅
+func (server *Server) broadcastToClients(message []byte) {
+	for client := range server.clients {
 		client.send <- message
 	}
 }
@@ -87,7 +93,7 @@ func (server *Server) notifyClientJoined(client *Client) {
 		Sender: client,
 	}
 
-	server.broadcastToClient(message.encode())
+	server.broadcastToClients(message.encode())
 }
 
 func (server *Server) notifyClientLeft(client *Client) {
@@ -96,11 +102,11 @@ func (server *Server) notifyClientLeft(client *Client) {
 		Sender: client,
 	}
 
-	server.broadcastToClient(message.encode())
+	server.broadcastToClients(message.encode())
 }
 
 func (server *Server) listOnlineClients(client *Client) {
-	for existingClient := range server.Clients {
+	for existingClient := range server.clients {
 		message := &Message{
 			Action: UserJoinedAction,
 			Sender: existingClient,
@@ -112,7 +118,7 @@ func (server *Server) listOnlineClients(client *Client) {
 //findRoomByName 이름으로 채팅방 찾기
 func (server *Server) findRoomByName(name string) *Room {
 	var foundRoom *Room
-	for room := range server.Rooms {
+	for room := range server.rooms {
 		if room.GetName() == name {
 			foundRoom = room
 			break
@@ -125,7 +131,7 @@ func (server *Server) findRoomByName(name string) *Room {
 //findRoomByID ID로 채팅방 찾기
 func (server *Server) findRoomByID(ID string) *Room {
 	var foundRoom *Room
-	for room := range server.Rooms {
+	for room := range server.rooms {
 		if room.GetId() == ID {
 			foundRoom = room
 			break
@@ -135,11 +141,24 @@ func (server *Server) findRoomByID(ID string) *Room {
 	return foundRoom
 }
 
+func (server *Server) findClientByID(ID string) *Client {
+	var foundClient *Client
+	for client := range server.clients {
+		if client.ID.String() == ID {
+			foundClient = client
+			break
+		}
+	}
+
+	return foundClient
+}
+
 //createRoom 채팅방을 생성
 func (server *Server) createRoom(name string, private bool) *Room {
 	room := NewRoom(name, private)
+	log.Println("room id", room.GetId())
 	go room.Start()
-	server.Rooms[room] = true
+	server.rooms[room] = true
 
 	return room
 }

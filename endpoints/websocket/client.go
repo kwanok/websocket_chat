@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"log"
@@ -27,6 +28,10 @@ func newClient(conn *websocket.Conn, server *Server, name string) *Client {
 	}
 }
 
+func (client *Client) GetId() string {
+	return client.ID.String()
+}
+
 func (client *Client) GetName() string {
 	return client.Name
 }
@@ -42,9 +47,16 @@ func (client *Client) disconnect() {
 
 func (client *Client) handleNewMessage(jsonMessage []byte) {
 
+	fmt.Println("handle")
+
 	var message Message
+
 	if err := json.Unmarshal(jsonMessage, &message); err != nil {
 		log.Printf("Error on unmarshal JSON message %s", err)
+		if e, ok := err.(*json.SyntaxError); ok {
+			log.Printf("syntax error at byte offset %d", e.Offset)
+		}
+		log.Printf("response: %q", jsonMessage)
 	}
 
 	// Attach the client object as the sender of the messsage.
@@ -52,19 +64,19 @@ func (client *Client) handleNewMessage(jsonMessage []byte) {
 
 	switch message.Action {
 	case SendMessageAction:
-		// The send-message action, this will send messages to a specific room now.
-		// Which room wil depend on the message Target
-		roomName := message.Target.GetName()
-		// Use the ChatServer method to find the room, and if found, broadcastToClient!
-		if room := client.server.findRoomByName(roomName); room != nil {
+		roomID := message.Target.GetId()
+		if room := client.server.findRoomByID(roomID); room != nil {
 			room.broadcast <- &message
 		}
-		// We delegate the join and leave actions.
+
 	case JoinRoomAction:
 		client.handleJoinRoomMessage(message)
 
 	case LeaveRoomAction:
 		client.handleLeaveRoomMessage(message)
+
+	case JoinRoomPrivateAction:
+		client.handleJoinRoomPrivateMessage(message)
 	}
 }
 
@@ -87,6 +99,22 @@ func (client *Client) handleLeaveRoomMessage(message Message) {
 	room.unregister <- client
 }
 
+func (client *Client) handleJoinRoomPrivateMessage(message Message) {
+
+	target := client.server.findClientByID(message.Message)
+
+	if target == nil {
+		return
+	}
+
+	// create unique room name combined to the two IDs
+	roomName := message.Message + client.ID.String()
+
+	client.joinRoom(roomName, target)
+	target.joinRoom(roomName, client)
+
+}
+
 func (client *Client) joinRoom(roomName string, sender *Client) {
 
 	room := client.server.findRoomByName(roomName)
@@ -98,6 +126,8 @@ func (client *Client) joinRoom(roomName string, sender *Client) {
 	if sender == nil && room.Private {
 		return
 	}
+
+	fmt.Println("room:", room)
 
 	if !client.isInRoom(room) {
 

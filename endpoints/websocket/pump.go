@@ -44,18 +44,17 @@ func (client *Client) readPump() {
 			break
 		}
 
-		client.server.broadcast <- jsonMessage
+		client.handleNewMessage(jsonMessage)
 	}
+
 }
 
 func (client *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
-
 	defer func() {
 		ticker.Stop()
 		client.conn.Close()
 	}()
-
 	for {
 		select {
 		case message, ok := <-client.send:

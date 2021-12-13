@@ -3,6 +3,7 @@ package websocket
 import (
 	"fmt"
 	"github.com/google/uuid"
+	"log"
 )
 
 const welcomeMessage = "%s joined the room"
@@ -57,6 +58,7 @@ func (room *Room) GetId() string {
 
 //registerClient 클라이언트를 채팅방에 등록
 func (room *Room) registerClient(client *Client) {
+	log.Println(room.GetId())
 	room.notifyClientJoined(client)
 	room.clients[client] = true
 }
