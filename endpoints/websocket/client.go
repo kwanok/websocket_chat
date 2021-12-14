@@ -2,7 +2,6 @@ package websocket
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"log"
@@ -46,8 +45,6 @@ func (client *Client) disconnect() {
 }
 
 func (client *Client) handleNewMessage(jsonMessage []byte) {
-
-	fmt.Println("handle")
 
 	var message Message
 
@@ -126,8 +123,6 @@ func (client *Client) joinRoom(roomName string, sender *Client) {
 	if sender == nil && room.Private {
 		return
 	}
-
-	fmt.Println("room:", room)
 
 	if !client.isInRoom(room) {
 

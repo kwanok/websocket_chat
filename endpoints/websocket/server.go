@@ -29,7 +29,7 @@ func NewServer() *Server {
 	}
 }
 
-func Handler(wsServer *Server, w http.ResponseWriter, r *http.Request) {
+func Handler(server *Server, w http.ResponseWriter, r *http.Request) {
 	name, ok := r.URL.Query()["name"]
 	if !ok || len(name[0]) < 1 {
 		log.Println("Url Param 'name' is missing")
@@ -42,13 +42,12 @@ func Handler(wsServer *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := newClient(conn, wsServer, name[0])
-	log.Println(client.GetName())
+	client := newClient(conn, server, name[0])
 
 	go client.writePump()
 	go client.readPump()
 
-	wsServer.register <- client
+	server.register <- client
 }
 
 func (server *Server) Run() {
@@ -156,7 +155,6 @@ func (server *Server) findClientByID(ID string) *Client {
 //createRoom 채팅방을 생성
 func (server *Server) createRoom(name string, private bool) *Room {
 	room := NewRoom(name, private)
-	log.Println("room id", room.GetId())
 	go room.Start()
 	server.rooms[room] = true
 
