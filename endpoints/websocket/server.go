@@ -140,6 +140,7 @@ func (server *Server) findRoomByID(ID string) *Room {
 	return foundRoom
 }
 
+//findClientByID ID로 유저 찾기
 func (server *Server) findClientByID(ID string) *Client {
 	var foundClient *Client
 	for client := range server.clients {
@@ -152,7 +153,7 @@ func (server *Server) findClientByID(ID string) *Client {
 	return foundClient
 }
 
-//createRoom 채팅방을 생성
+//createRoom 채팅방 생성
 func (server *Server) createRoom(name string, private bool) *Room {
 	room := NewRoom(name, private)
 	go room.Start()

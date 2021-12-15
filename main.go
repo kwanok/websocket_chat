@@ -23,6 +23,12 @@ func main() {
 
 	}(server.DBCon)
 
+	defer func(Sqlite3 *sql.DB) {
+		err := Sqlite3.Close()
+		utils.FatalError{Error: err}.Handle()
+
+	}(server.Sqlite3)
+
 	routes.Routes(r)
 
 	err := r.Run()

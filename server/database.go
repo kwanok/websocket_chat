@@ -6,11 +6,14 @@ import (
 	"github.com/go-redis/redis/v7"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
+	_ "github.com/mattn/go-sqlite3"
+	"log"
 	"os"
 )
 
 var DBCon *sql.DB
 var RedisClient *redis.Client
+var Sqlite3 *sql.DB
 
 type DatabaseInfo struct {
 	Name     string
@@ -29,6 +32,7 @@ func InitDB() string {
 
 	go initMysql()
 	go initRedis()
+	go initSqlite3()
 
 	return "InitDB Success"
 }
@@ -46,6 +50,38 @@ func initRedis() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func initSqlite3() {
+	db, err := sql.Open("sqlite3", "./chat.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	sqlStmt := `	
+	CREATE TABLE IF NOT EXISTS room (
+		id VARCHAR(255) NOT NULL PRIMARY KEY,
+		name VARCHAR(255) NOT NULL,
+		private TINYINT NULL
+	);
+	`
+	_, err = db.Exec(sqlStmt)
+	if err != nil {
+		log.Fatal("%q: %s\n", err, sqlStmt)
+	}
+
+	sqlStmt = `	
+	CREATE TABLE IF NOT EXISTS user (
+		id VARCHAR(255) NOT NULL PRIMARY KEY,
+		name VARCHAR(255) NOT NULL
+	);
+	`
+	_, err = db.Exec(sqlStmt)
+	if err != nil {
+		log.Fatal("%q: %s\n", err, sqlStmt)
+	}
+
+	Sqlite3 = db
 }
 
 func initMysql() {
