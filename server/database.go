@@ -59,15 +59,20 @@ func initSqlite3() {
 	}
 
 	sqlStmt := `	
-	CREATE TABLE IF NOT EXISTS room (
-		id VARCHAR(255) NOT NULL PRIMARY KEY,
-		name VARCHAR(255) NOT NULL,
-		private TINYINT NULL
+	create table if not exists users(
+    	id    	   varchar(255) not null primary key autoincrement,
+    	level      integer default 1 not null,
+    	name       varchar(255) not null,
+    	email      varchar(255) not null,
+    	password   varchar(255),
+    	created_at datetime default CURRENT_TIMESTAMP,
+    	updated_at datetime default CURRENT_TIMESTAMP
 	);
 	`
+
 	_, err = db.Exec(sqlStmt)
 	if err != nil {
-		log.Fatal("%q: %s\n", err, sqlStmt)
+		log.Fatalf("%q: %s\n", err, sqlStmt)
 	}
 
 	sqlStmt = `	
@@ -78,7 +83,7 @@ func initSqlite3() {
 	`
 	_, err = db.Exec(sqlStmt)
 	if err != nil {
-		log.Fatal("%q: %s\n", err, sqlStmt)
+		log.Fatalf("%q: %s\n", err, sqlStmt)
 	}
 
 	Sqlite3 = db

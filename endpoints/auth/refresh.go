@@ -3,12 +3,11 @@ package auth
 import (
 	"fmt"
 	"friday/server/auth"
-	"friday/server/models"
+	"friday/server/repository"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
-	"strconv"
 )
 
 func Refresh(c *gin.Context) {
@@ -45,12 +44,8 @@ func Refresh(c *gin.Context) {
 			c.JSON(http.StatusUnprocessableEntity, err)
 			return
 		}
-		userId, err := strconv.ParseUint(fmt.Sprintf("%.f", claims["user_id"]), 10, 64)
-		if err != nil {
-			c.JSON(http.StatusUnprocessableEntity, "Error occurred")
-			return
-		}
-		user, err := models.GetUserById(userId)
+		userId, ok := claims["user_id"].(string)
+		user, err := repository.GetUserById(userId)
 		if err != nil {
 			c.JSON(http.StatusUnprocessableEntity, "Error occurred")
 			return

@@ -2,7 +2,7 @@ package auth
 
 import (
 	"friday/server/auth"
-	"friday/server/models"
+	"friday/server/repository"
 	"friday/server/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -17,7 +17,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	user, err := models.GetUserByEmail(json.Email)
+	user, err := repository.GetUserByEmail(json.Email)
 	utils.FatalError{Error: err}.Handle()
 
 	if user.Email != json.Email || !auth.CompareHash(user.Password, json.Password) {

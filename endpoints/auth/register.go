@@ -2,6 +2,7 @@ package auth
 
 import (
 	"friday/server/models"
+	"friday/server/repository"
 	"friday/server/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -21,7 +22,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	err := models.CreateUser(json.Email, models.LevelUser, json.Password, "노과농")
+	err := repository.CreateUser(json.Email, models.LevelUser, json.Password, "노과농")
 	utils.FatalError{Error: err}.Handle()
 
 	c.JSON(http.StatusOK, json)

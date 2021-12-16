@@ -27,17 +27,17 @@ type AccessDetails struct {
 }
 
 //CreateAuth 레디스에 유저정보 저장
-func CreateAuth(userid uint64, td *TokenDetails) error {
+func CreateAuth(userid string, td *TokenDetails) error {
 	at := time.Unix(td.AtExpires, 0)
 	rt := time.Unix(td.RtExpires, 0)
 	now := time.Now()
 
-	errAccess := server.RedisClient.Set(td.AccessUuid, strconv.Itoa(int(userid)), at.Sub(now)).Err()
+	errAccess := server.RedisClient.Set(td.AccessUuid, userid, at.Sub(now)).Err()
 	if errAccess != nil {
 		return errAccess
 	}
 
-	errRefresh := server.RedisClient.Set(td.RefreshUuid, strconv.Itoa(int(userid)), rt.Sub(now)).Err()
+	errRefresh := server.RedisClient.Set(td.RefreshUuid, userid, rt.Sub(now)).Err()
 	if errRefresh != nil {
 		return errRefresh
 	}
@@ -46,7 +46,7 @@ func CreateAuth(userid uint64, td *TokenDetails) error {
 }
 
 //CreateToken 토큰 생성
-func CreateToken(id uint64, level int) (*TokenDetails, error) {
+func CreateToken(id string, level int) (*TokenDetails, error) {
 	td := &TokenDetails{}
 	td.AtExpires = time.Now().Add(time.Minute * 15).Unix()
 	td.AccessUuid = uuid.NewV4().String()

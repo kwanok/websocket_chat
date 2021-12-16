@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"encoding/json"
+	"friday/server/models"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"log"
@@ -112,7 +113,7 @@ func (client *Client) handleJoinRoomPrivateMessage(message Message) {
 
 }
 
-func (client *Client) joinRoom(roomName string, sender *Client) {
+func (client *Client) joinRoom(roomName string, sender models.User) {
 
 	room := client.server.findRoomByName(roomName)
 	if room == nil {
@@ -142,7 +143,7 @@ func (client *Client) isInRoom(room *Room) bool {
 	return false
 }
 
-func (client *Client) notifyRoomJoined(room *Room, sender *Client) {
+func (client *Client) notifyRoomJoined(room *Room, sender models.User) {
 	message := Message{
 		Action: RoomJoinedAction,
 		Target: room,

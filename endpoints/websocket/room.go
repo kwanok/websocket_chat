@@ -53,6 +53,10 @@ func (room *Room) GetId() string {
 	return room.Id.String()
 }
 
+func (room *Room) GetPrivate() bool {
+	return room.Private
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 
 //registerClient 클라이언트를 채팅방에 등록
