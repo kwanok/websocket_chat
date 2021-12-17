@@ -2,7 +2,8 @@ package websocket
 
 import (
 	"encoding/json"
-	"friday/server/models"
+	"friday/config"
+	"friday/config/models"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"log"
@@ -111,9 +112,14 @@ func (client *Client) handleJoinRoomPrivateMessage(message Message) {
 	client.joinRoom(roomName, target)
 	target.joinRoom(roomName, client)
 
+	joinedRoom := client.joinRoom(roomName, target)
+
+	if joinedRoom != nil {
+		client.inviteTargetUser(target, joinedRoom)
+	}
 }
 
-func (client *Client) joinRoom(roomName string, sender models.User) {
+func (client *Client) joinRoom(roomName string, sender models.User) *Room {
 
 	room := client.server.findRoomByName(roomName)
 	if room == nil {
@@ -122,17 +128,29 @@ func (client *Client) joinRoom(roomName string, sender models.User) {
 
 	// Don't allow to join private rooms through public room message
 	if sender == nil && room.Private {
-		return
+		return nil
 	}
 
 	if !client.isInRoom(room) {
-
 		client.pool[room] = true
 		room.register <- client
-
 		client.notifyRoomJoined(room, sender)
 	}
 
+	return room
+}
+
+func (client *Client) inviteTargetUser(target models.User, room *Room) {
+	inviteMessage := &Message{
+		Action:  JoinRoomPrivateAction,
+		Message: target.GetId(),
+		Target:  room,
+		Sender:  client,
+	}
+
+	if err := config.PubSubRedis.Publish(ctx, PubSubGeneralChannel, inviteMessage.encode()).Err(); err != nil {
+		log.Println(err)
+	}
 }
 
 func (client *Client) isInRoom(room *Room) bool {

@@ -1,8 +1,8 @@
 package admin
 
 import (
-	"friday/server/repository"
-	"friday/server/utils"
+	"friday/config/repository"
+	"friday/config/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )

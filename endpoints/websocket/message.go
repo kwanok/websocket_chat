@@ -2,7 +2,7 @@ package websocket
 
 import (
 	"encoding/json"
-	"friday/server/models"
+	"friday/config/models"
 	"log"
 )
 

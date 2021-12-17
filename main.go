@@ -2,9 +2,9 @@ package main
 
 import (
 	"database/sql"
+	"friday/config"
+	"friday/config/utils"
 	"friday/routes"
-	"friday/server"
-	"friday/server/utils"
 	"github.com/gin-gonic/gin"
 	"log"
 	"os"
@@ -15,21 +15,18 @@ var mainLogger *log.Logger
 func main() {
 	r := gin.Default()
 	mainLogger = log.New(os.Stdout, "MAIN: ", log.LstdFlags)
-	mainLogger.Println(server.InitDB())
+	mainLogger.Println(config.InitDB())
 
 	defer func(DBCon *sql.DB) {
 		err := DBCon.Close()
 		utils.FatalError{Error: err}.Handle()
 
-	}(server.DBCon)
+	}(config.DBCon)
 
-	defer func(Sqlite3 *sql.DB) {
-		err := Sqlite3.Close()
-		utils.FatalError{Error: err}.Handle()
+	sqlite := config.InitSqlite3()
+	defer sqlite.Close()
 
-	}(server.Sqlite3)
-
-	routes.Routes(r)
+	routes.Routes(r, sqlite)
 
 	err := r.Run()
 	utils.FatalError{Error: err}.Handle()

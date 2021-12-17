@@ -1,8 +1,8 @@
 package models
 
 import (
-	"friday/server"
-	"friday/server/utils"
+	"friday/config"
+	"friday/config/utils"
 )
 
 type Post struct {
@@ -17,7 +17,7 @@ type Post struct {
 func GetAllPosts() ([]Post, error) {
 	posts := make([]Post, 0)
 
-	rows, err := server.DBCon.Query("SELECT id, author_id, title, content, created_at, updated_at FROM posts")
+	rows, err := config.DBCon.Query("SELECT id, author_id, title, content, created_at, updated_at FROM posts")
 	utils.FatalError{Error: err}.Handle()
 	defer rows.Close()
 

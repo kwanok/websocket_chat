@@ -1,9 +1,9 @@
 package auth
 
 import (
-	"friday/server/auth"
-	"friday/server/repository"
-	"friday/server/utils"
+	"friday/config/auth"
+	"friday/config/repository"
+	"friday/config/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )

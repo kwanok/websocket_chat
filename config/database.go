@@ -1,9 +1,9 @@
-package server
+package config
 
 import (
 	"database/sql"
-	"friday/server/utils"
-	"github.com/go-redis/redis/v7"
+	"friday/config/utils"
+	"github.com/go-redis/redis/v8"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
@@ -12,8 +12,8 @@ import (
 )
 
 var DBCon *sql.DB
-var RedisClient *redis.Client
-var Sqlite3 *sql.DB
+var JwtRedis *redis.Client
+var PubSubRedis *redis.Client
 
 type DatabaseInfo struct {
 	Name     string
@@ -32,27 +32,30 @@ func InitDB() string {
 
 	go initMysql()
 	go initRedis()
-	go initSqlite3()
 
 	return "InitDB Success"
 }
 
 func initRedis() {
 	//Initializing redis
-	dsn := os.Getenv("REDIS_DSN")
-	if len(dsn) == 0 {
-		dsn = "localhost:6379"
+	jwtDsn := os.Getenv("REDIS_JWT_DSN")
+	if len(jwtDsn) == 0 {
+		jwtDsn = "localhost:6379"
 	}
-	RedisClient = redis.NewClient(&redis.Options{
-		Addr: dsn, //redis port
+	JwtRedis = redis.NewClient(&redis.Options{
+		Addr: jwtDsn, //redis port
 	})
-	_, err := RedisClient.Ping().Result()
-	if err != nil {
-		panic(err)
+
+	psDsn := os.Getenv("REDIS_PUB_SUB_DSN")
+	if len(psDsn) == 0 {
+		psDsn = "localhost:6380"
 	}
+	PubSubRedis = redis.NewClient(&redis.Options{
+		Addr: psDsn, //redis port
+	})
 }
 
-func initSqlite3() {
+func InitSqlite3() *sql.DB {
 	db, err := sql.Open("sqlite3", "./chat.db")
 	if err != nil {
 		log.Fatal(err)
@@ -60,7 +63,7 @@ func initSqlite3() {
 
 	sqlStmt := `	
 	create table if not exists users(
-    	id    	   varchar(255) not null primary key autoincrement,
+    	id    	   varchar(255) not null primary key,
     	level      integer default 1 not null,
     	name       varchar(255) not null,
     	email      varchar(255) not null,
@@ -76,9 +79,10 @@ func initSqlite3() {
 	}
 
 	sqlStmt = `	
-	CREATE TABLE IF NOT EXISTS user (
+	CREATE TABLE IF NOT EXISTS room (
 		id VARCHAR(255) NOT NULL PRIMARY KEY,
-		name VARCHAR(255) NOT NULL
+		name VARCHAR(255) NOT NULL,
+		private TINYINT NULL
 	);
 	`
 	_, err = db.Exec(sqlStmt)
@@ -86,7 +90,7 @@ func initSqlite3() {
 		log.Fatalf("%q: %s\n", err, sqlStmt)
 	}
 
-	Sqlite3 = db
+	return db
 }
 
 func initMysql() {

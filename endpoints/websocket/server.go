@@ -1,10 +1,16 @@
 package websocket
 
 import (
+	"encoding/json"
+	"friday/config"
+	"friday/config/models"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 )
+
+const PubSubGeneralChannel = "general"
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -12,21 +18,33 @@ var upgrader = websocket.Upgrader{
 }
 
 type Server struct {
-	clients    map[*Client]bool
-	rooms      map[*Room]bool
-	register   chan *Client
-	unregister chan *Client
-	broadcast  chan []byte
+	clients        map[*Client]bool
+	rooms          map[*Room]bool
+	register       chan *Client
+	unregister     chan *Client
+	broadcast      chan []byte
+	users          []models.User
+	roomRepository models.RoomRepository
+	userRepository models.UserRepository
 }
 
-func NewServer() *Server {
-	return &Server{
-		clients:    make(map[*Client]bool),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
-		broadcast:  make(chan []byte),
-		rooms:      make(map[*Room]bool),
+func NewServer(
+	roomRepository models.RoomRepository,
+	userRepository models.UserRepository,
+) *Server {
+	server := &Server{
+		clients:        make(map[*Client]bool),
+		register:       make(chan *Client),
+		unregister:     make(chan *Client),
+		broadcast:      make(chan []byte),
+		rooms:          make(map[*Room]bool),
+		roomRepository: roomRepository,
+		userRepository: userRepository,
 	}
+
+	server.users = userRepository.GetAllUsers()
+
+	return server
 }
 
 func Handler(server *Server, w http.ResponseWriter, r *http.Request) {
@@ -51,6 +69,7 @@ func Handler(server *Server, w http.ResponseWriter, r *http.Request) {
 }
 
 func (server *Server) Run() {
+	go server.listenPubSubChannel()
 	for {
 		select {
 		case client := <-server.register:
@@ -67,7 +86,11 @@ func (server *Server) Run() {
 
 //registerClient 서버에 클라이언트를 등록
 func (server *Server) registerClient(client *Client) {
-	server.notifyClientJoined(client)
+	// 유저를 db에 저장
+	server.userRepository.AddUser(client)
+
+	server.publishClientJoined(client)
+
 	server.listOnlineClients(client)
 	server.clients[client] = true
 }
@@ -76,6 +99,12 @@ func (server *Server) registerClient(client *Client) {
 func (server *Server) unregisterClient(client *Client) {
 	if _, ok := server.clients[client]; ok {
 		delete(server.clients, client)
+
+		// Remove user from repo
+		server.userRepository.RemoveUser(client)
+
+		// Publish user left in PubSub
+		server.publishClientLeft(client)
 	}
 }
 
@@ -105,13 +134,27 @@ func (server *Server) notifyClientLeft(client *Client) {
 }
 
 func (server *Server) listOnlineClients(client *Client) {
-	for existingClient := range server.clients {
+	for _, user := range server.users {
 		message := &Message{
 			Action: UserJoinedAction,
-			Sender: existingClient,
+			Sender: user,
 		}
 		client.send <- message.encode()
 	}
+}
+
+func (server *Server) runRoomFromRepository(name string) *Room {
+	var room *Room
+	dbRoom := server.roomRepository.FindRoomByName(name)
+	if dbRoom != nil {
+		room = NewRoom(dbRoom.GetName(), dbRoom.GetPrivate())
+		room.Id, _ = uuid.Parse(dbRoom.GetId())
+
+		go room.Start()
+		server.rooms[room] = true
+	}
+
+	return room
 }
 
 //findRoomByName 이름으로 채팅방 찾기
@@ -122,6 +165,10 @@ func (server *Server) findRoomByName(name string) *Room {
 			foundRoom = room
 			break
 		}
+	}
+
+	if foundRoom == nil {
+		foundRoom = server.runRoomFromRepository(name)
 	}
 
 	return foundRoom
@@ -140,7 +187,7 @@ func (server *Server) findRoomByID(ID string) *Room {
 	return foundRoom
 }
 
-//findClientByID ID로 유저 찾기
+//findClientByID ID로 클라이언트 찾기
 func (server *Server) findClientByID(ID string) *Client {
 	var foundClient *Client
 	for client := range server.clients {
@@ -153,11 +200,98 @@ func (server *Server) findClientByID(ID string) *Client {
 	return foundClient
 }
 
+//findUserByID ID로 유저 찾기
+func (server *Server) findUserByID(ID string) models.User {
+	var foundUser models.User
+	for _, client := range server.users {
+		if client.GetId() == ID {
+			foundUser = client
+			break
+		}
+	}
+
+	return foundUser
+}
+
 //createRoom 채팅방 생성
 func (server *Server) createRoom(name string, private bool) *Room {
 	room := NewRoom(name, private)
+	server.roomRepository.AddRoom(room)
+
 	go room.Start()
 	server.rooms[room] = true
 
 	return room
+}
+
+//publishClientJoined Redis 유저 합류 발행
+func (server *Server) publishClientJoined(client *Client) {
+	message := &Message{
+		Action: UserJoinedAction,
+		Sender: client,
+	}
+
+	if err := config.PubSubRedis.Publish(ctx, PubSubGeneralChannel, message.encode()).Err(); err != nil {
+		log.Println(err)
+	}
+}
+
+//publishClientLeft Redis 유저 이탈 발행
+func (server *Server) publishClientLeft(client *Client) {
+	message := &Message{
+		Action: UserLeftAction,
+		Sender: client,
+	}
+
+	if err := config.PubSubRedis.Publish(ctx, PubSubGeneralChannel, message.encode()).Err(); err != nil {
+		log.Println(err)
+	}
+}
+
+func (server *Server) listenPubSubChannel() {
+
+	pubsub := config.PubSubRedis.Subscribe(ctx, PubSubGeneralChannel)
+	ch := pubsub.Channel()
+	for msg := range ch {
+
+		var message Message
+		if err := json.Unmarshal([]byte(msg.Payload), &message); err != nil {
+			log.Printf("Error on unmarshal JSON message %s", err)
+			return
+		}
+
+		switch message.Action {
+		case UserJoinedAction:
+			server.handleUserJoined(message)
+		case UserLeftAction:
+			server.handleUserLeft(message)
+		case JoinRoomPrivateAction:
+			server.handleUserJoinPrivate(message)
+		}
+	}
+}
+
+func (server *Server) handleUserJoined(message Message) {
+	// Add the user to the slice
+	server.users = append(server.users, message.Sender)
+	server.broadcastToClients(message.encode())
+}
+
+func (server *Server) handleUserLeft(message Message) {
+	// Remove the user from the slice
+	for i, user := range server.users {
+		if user.GetId() == message.Sender.GetId() {
+			server.users[i] = server.users[len(server.users)-1]
+			server.users = server.users[:len(server.users)-1]
+		}
+	}
+	server.broadcastToClients(message.encode())
+}
+
+func (server *Server) handleUserJoinPrivate(message Message) {
+	// Find client for given user, if found add the user to the room.
+	targetClient := server.findClientByID(message.Message)
+	if targetClient != nil {
+		targetClient.joinRoom(message.Target.GetName(), message.Sender)
+	}
 }

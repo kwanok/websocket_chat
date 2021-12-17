@@ -1,21 +1,23 @@
 package routes
 
 import (
+	"database/sql"
+	"friday/config/repository"
+	"friday/config/utils"
 	"friday/endpoints/admin"
 	"friday/endpoints/auth"
 	"friday/endpoints/post"
 	"friday/endpoints/websocket"
 	"friday/middlewares"
-	"friday/server/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
-func Routes(r *gin.Engine) {
+func Routes(r *gin.Engine, sqlite *sql.DB) {
 	err := godotenv.Load(".env")
 	utils.FatalError{Error: err}.Handle()
 
-	wsServer := websocket.NewServer()
+	wsServer := websocket.NewServer(&repository.RoomRepository{Db: sqlite}, &repository.UserRepository{Db: sqlite})
 	go wsServer.Run()
 
 	r.GET("/", func(c *gin.Context) {

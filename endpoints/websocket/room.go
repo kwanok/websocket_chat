@@ -1,11 +1,16 @@
 package websocket
 
 import (
+	"context"
 	"fmt"
+	"friday/config"
 	"github.com/google/uuid"
+	"log"
 )
 
 const welcomeMessage = "%s joined the room"
+
+var ctx = context.Background()
 
 type Room struct {
 	Id         uuid.UUID `json:"id"`
@@ -40,7 +45,7 @@ func (room *Room) Start() {
 			room.unregisterClient(client)
 
 		case message := <-room.broadcast:
-			room.broadcastToClients(message.encode())
+			room.publishRoomMessage(message.encode())
 		}
 	}
 }
@@ -86,5 +91,23 @@ func (room *Room) notifyClientJoined(client *Client) {
 		Message: fmt.Sprintf(welcomeMessage, client.GetName()),
 	}
 
-	room.broadcastToClients(message.encode())
+	room.publishRoomMessage(message.encode())
+}
+
+func (room *Room) publishRoomMessage(message []byte) {
+	err := config.PubSubRedis.Publish(ctx, room.GetName(), message).Err()
+
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func (room *Room) subscribeToRoomMessages() {
+	pubsub := config.PubSubRedis.Subscribe(ctx, room.GetName())
+
+	ch := pubsub.Channel()
+
+	for msg := range ch {
+		room.broadcastToClients([]byte(msg.Payload))
+	}
 }

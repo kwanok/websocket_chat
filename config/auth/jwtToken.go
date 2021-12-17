@@ -1,8 +1,9 @@
 package auth
 
 import (
+	"context"
 	"fmt"
-	"friday/server"
+	"friday/config"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/twinj/uuid"
 	"net/http"
@@ -11,6 +12,8 @@ import (
 	"strings"
 	"time"
 )
+
+var ctx = context.Background()
 
 type TokenDetails struct {
 	AccessToken  string
@@ -32,12 +35,12 @@ func CreateAuth(userid string, td *TokenDetails) error {
 	rt := time.Unix(td.RtExpires, 0)
 	now := time.Now()
 
-	errAccess := server.RedisClient.Set(td.AccessUuid, userid, at.Sub(now)).Err()
+	errAccess := config.JwtRedis.Set(ctx, td.AccessUuid, userid, at.Sub(now)).Err()
 	if errAccess != nil {
 		return errAccess
 	}
 
-	errRefresh := server.RedisClient.Set(td.RefreshUuid, userid, rt.Sub(now)).Err()
+	errRefresh := config.JwtRedis.Set(ctx, td.RefreshUuid, userid, rt.Sub(now)).Err()
 	if errRefresh != nil {
 		return errRefresh
 	}
@@ -146,7 +149,7 @@ func ExtractTokenMetadata(r *http.Request) (*AccessDetails, error) {
 
 //FetchAuth 레디스에 있는 userId 를 가져옴
 func FetchAuth(authD *AccessDetails) (uint64, error) {
-	userid, err := server.RedisClient.Get(authD.AccessUuid).Result()
+	userid, err := config.JwtRedis.Get(ctx, authD.AccessUuid).Result()
 	if err != nil {
 		return 0, err
 	}
@@ -156,7 +159,7 @@ func FetchAuth(authD *AccessDetails) (uint64, error) {
 
 //DeleteAuth 레디스에 있는 uuid 데이터 삭제
 func DeleteAuth(givenUuid string) (int64, error) {
-	deleted, err := server.RedisClient.Del(givenUuid).Result()
+	deleted, err := config.JwtRedis.Del(ctx, givenUuid).Result()
 	if err != nil {
 		return 0, err
 	}
