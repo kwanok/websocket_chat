@@ -224,7 +224,7 @@ func (server *Server) createRoom(name string, private bool) *Room {
 	return room
 }
 
-//publishClientJoined Redis 유저 합류 발행
+//publishClientJoined Redis 유저 합류 PUB
 func (server *Server) publishClientJoined(client *Client) {
 	message := &Message{
 		Action: UserJoinedAction,
@@ -236,7 +236,7 @@ func (server *Server) publishClientJoined(client *Client) {
 	}
 }
 
-//publishClientLeft Redis 유저 이탈 발행
+//publishClientLeft Redis 유저 이탈 PUB
 func (server *Server) publishClientLeft(client *Client) {
 	message := &Message{
 		Action: UserLeftAction,
