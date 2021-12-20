@@ -3,7 +3,7 @@ package websocket
 import (
 	"encoding/json"
 	"friday/config"
-	"friday/config/models"
+	models "friday/models"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"log"
@@ -23,7 +23,7 @@ type Server struct {
 	register       chan *Client
 	unregister     chan *Client
 	broadcast      chan []byte
-	users          []models.User
+	users          []models.ChatClient
 	roomRepository models.RoomRepository
 	userRepository models.UserRepository
 }
@@ -201,8 +201,8 @@ func (server *Server) findClientByID(ID string) *Client {
 }
 
 //findUserByID ID로 유저 찾기
-func (server *Server) findUserByID(ID string) models.User {
-	var foundUser models.User
+func (server *Server) findUserByID(ID string) models.ChatClient {
+	var foundUser models.ChatClient
 	for _, client := range server.users {
 		if client.GetId() == ID {
 			foundUser = client

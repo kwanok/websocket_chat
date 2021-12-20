@@ -2,7 +2,7 @@ package websocket
 
 import (
 	"encoding/json"
-	"friday/config/models"
+	"friday/models"
 	"log"
 )
 
@@ -25,10 +25,10 @@ const JoinRoomPrivateAction = "join-room-private"
 const RoomJoinedAction = "room-joined"
 
 type Message struct {
-	Action  string      `json:"action"`
-	Message string      `json:"message"`
-	Target  *Room       `json:"target"`
-	Sender  models.User `json:"sender"`
+	Action  string            `json:"action"`
+	Message string            `json:"message"`
+	Target  *Room             `json:"target"`
+	Sender  models.ChatClient `json:"sender"`
 }
 
 //encode 제이슨을 평문으로 마샬링

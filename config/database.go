@@ -14,6 +14,7 @@ import (
 var DBCon *sql.DB
 var JwtRedis *redis.Client
 var PubSubRedis *redis.Client
+var Sqlite3 *sql.DB
 
 type DatabaseInfo struct {
 	Name     string
@@ -79,7 +80,7 @@ func InitSqlite3() *sql.DB {
 	}
 
 	sqlStmt = `	
-	CREATE TABLE IF NOT EXISTS room (
+	CREATE TABLE IF NOT EXISTS rooms (
 		id VARCHAR(255) NOT NULL PRIMARY KEY,
 		name VARCHAR(255) NOT NULL,
 		private TINYINT NULL
@@ -89,6 +90,8 @@ func InitSqlite3() *sql.DB {
 	if err != nil {
 		log.Fatalf("%q: %s\n", err, sqlStmt)
 	}
+
+	Sqlite3 = db
 
 	return db
 }

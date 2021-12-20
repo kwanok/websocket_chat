@@ -2,7 +2,7 @@ package repository
 
 import (
 	"database/sql"
-	"friday/config/models"
+	"friday/models"
 )
 
 type Room struct {
@@ -28,7 +28,7 @@ type RoomRepository struct {
 }
 
 func (repo *RoomRepository) AddRoom(room models.Room) {
-	stmt, err := repo.Db.Prepare("INSERT INTO room(id, name, private) values(?,?,?)")
+	stmt, err := repo.Db.Prepare("INSERT INTO rooms(id, name, private) values(?,?,?)")
 	checkErr(err)
 
 	_, err = stmt.Exec(room.GetId(), room.GetName(), room.GetPrivate())
@@ -37,7 +37,7 @@ func (repo *RoomRepository) AddRoom(room models.Room) {
 
 func (repo *RoomRepository) FindRoomByName(name string) models.Room {
 
-	row := repo.Db.QueryRow("SELECT id, name, private FROM room where name = ? LIMIT 1", name)
+	row := repo.Db.QueryRow("SELECT id, name, private FROM rooms where name = ? LIMIT 1", name)
 
 	var room Room
 

@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"friday/config"
 	"friday/config/auth"
-	"friday/config/models"
 	"friday/config/utils"
+	"friday/models"
 	"log"
 )
 
@@ -35,11 +35,15 @@ func (user *User) GetEmail() string {
 	return user.Email
 }
 
+func (user *User) GetPassword() string {
+	return user.Password
+}
+
 type UserRepository struct {
 	Db *sql.DB
 }
 
-func (repo *UserRepository) AddUser(user models.User) {
+func (repo *UserRepository) AddUser(user models.ChatClient) {
 	stmt, err := repo.Db.Prepare("INSERT INTO users(id, name) values(?,?)")
 	checkErr(err)
 
@@ -47,7 +51,7 @@ func (repo *UserRepository) AddUser(user models.User) {
 	checkErr(err)
 }
 
-func (repo *UserRepository) RemoveUser(user models.User) {
+func (repo *UserRepository) RemoveUser(user models.ChatClient) {
 	stmt, err := repo.Db.Prepare("DELETE FROM users WHERE id = ?")
 	checkErr(err)
 
@@ -55,7 +59,7 @@ func (repo *UserRepository) RemoveUser(user models.User) {
 	checkErr(err)
 }
 
-func (repo *UserRepository) FindUserById(ID string) models.User {
+func (repo *UserRepository) FindChatClientById(ID string) models.ChatClient {
 
 	row := repo.Db.QueryRow("SELECT id, name FROM users where id = ? LIMIT 1", ID)
 
@@ -72,18 +76,62 @@ func (repo *UserRepository) FindUserById(ID string) models.User {
 
 }
 
-func (repo *UserRepository) GetAllUsers() []models.User {
+func (repo *UserRepository) FindClientById(Id string) models.Client {
+	row := repo.Db.QueryRow("SELECT id, level, email, password, name FROM users where id = ? LIMIT 1", Id)
+
+	var user User
+
+	if err := row.Scan(
+		&user.Id,
+		&user.Level,
+		&user.Email,
+		&user.Password,
+		&user.Name,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return nil
+		}
+		panic(err)
+	}
+
+	return &user
+}
+
+func (repo *UserRepository) GetAllUsers() []models.ChatClient {
 
 	rows, err := repo.Db.Query("SELECT id, name FROM users")
 
 	if err != nil {
 		log.Fatal(err)
 	}
-	var users []models.User
+	var users []models.ChatClient
 	defer rows.Close()
 	for rows.Next() {
 		var user User
 		rows.Scan(&user.Id, &user.Name)
+		users = append(users, &user)
+	}
+
+	return users
+}
+
+func (repo *UserRepository) GetAllClients() []models.Client {
+	rows, err := repo.Db.Query("SELECT id, level, email, password, name FROM users")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	var users []models.Client
+	defer rows.Close()
+	for rows.Next() {
+		var user User
+		rows.Scan(
+			&user.Id,
+			&user.Level,
+			&user.Email,
+			&user.Password,
+			&user.Name,
+		)
 		users = append(users, &user)
 	}
 

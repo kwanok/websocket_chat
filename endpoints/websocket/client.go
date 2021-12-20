@@ -3,7 +3,7 @@ package websocket
 import (
 	"encoding/json"
 	"friday/config"
-	"friday/config/models"
+	"friday/models"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"log"
@@ -13,18 +13,18 @@ type Client struct {
 	ID     uuid.UUID `json:"id"`
 	Name   string    `json:"name"`
 	conn   *websocket.Conn
-	pool   map[*Room]bool
-	send   chan []byte
 	server *Server
+	rooms  map[*Room]bool
+	send   chan []byte
 }
 
 func newClient(conn *websocket.Conn, server *Server, name string) *Client {
 	return &Client{
-		pool:   make(map[*Room]bool),
-		server: server,
 		ID:     uuid.New(),
 		Name:   name,
 		conn:   conn,
+		server: server,
+		rooms:  make(map[*Room]bool),
 		send:   make(chan []byte, 256),
 	}
 }
@@ -41,7 +41,7 @@ func (client *Client) GetName() string {
 
 func (client *Client) disconnect() {
 	client.server.unregister <- client
-	for room := range client.pool {
+	for room := range client.rooms {
 		room.unregister <- client
 	}
 }
@@ -91,8 +91,8 @@ func (client *Client) handleLeaveRoomMessage(message Message) {
 		return
 	}
 
-	if _, ok := client.pool[room]; ok {
-		delete(client.pool, room)
+	if _, ok := client.rooms[room]; ok {
+		delete(client.rooms, room)
 	}
 
 	room.unregister <- client
@@ -119,7 +119,7 @@ func (client *Client) handleJoinRoomPrivateMessage(message Message) {
 	}
 }
 
-func (client *Client) joinRoom(roomName string, sender models.User) *Room {
+func (client *Client) joinRoom(roomName string, sender models.ChatClient) *Room {
 
 	room := client.server.findRoomByName(roomName)
 	if room == nil {
@@ -132,7 +132,7 @@ func (client *Client) joinRoom(roomName string, sender models.User) *Room {
 	}
 
 	if !client.isInRoom(room) {
-		client.pool[room] = true
+		client.rooms[room] = true
 		room.register <- client
 		client.notifyRoomJoined(room, sender)
 	}
@@ -140,7 +140,7 @@ func (client *Client) joinRoom(roomName string, sender models.User) *Room {
 	return room
 }
 
-func (client *Client) inviteTargetUser(target models.User, room *Room) {
+func (client *Client) inviteTargetUser(target models.ChatClient, room *Room) {
 	inviteMessage := &Message{
 		Action:  JoinRoomPrivateAction,
 		Message: target.GetId(),
@@ -154,14 +154,14 @@ func (client *Client) inviteTargetUser(target models.User, room *Room) {
 }
 
 func (client *Client) isInRoom(room *Room) bool {
-	if _, ok := client.pool[room]; ok {
+	if _, ok := client.rooms[room]; ok {
 		return true
 	}
 
 	return false
 }
 
-func (client *Client) notifyRoomJoined(room *Room, sender models.User) {
+func (client *Client) notifyRoomJoined(room *Room, sender models.ChatClient) {
 	message := Message{
 		Action: RoomJoinedAction,
 		Target: room,

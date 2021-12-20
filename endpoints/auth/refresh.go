@@ -2,8 +2,9 @@ package auth
 
 import (
 	"fmt"
+	"friday/config"
 	"friday/config/auth"
-	"friday/config/repository"
+	"friday/repository"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -45,7 +46,8 @@ func Refresh(c *gin.Context) {
 			return
 		}
 		userId, ok := claims["user_id"].(string)
-		user, err := repository.GetUserById(userId)
+		userRepository := repository.UserRepository{Db: config.Sqlite3}
+		user := userRepository.FindClientById(userId)
 		if err != nil {
 			c.JSON(http.StatusUnprocessableEntity, "Error occurred")
 			return
@@ -57,7 +59,7 @@ func Refresh(c *gin.Context) {
 			return
 		}
 		//Create new pairs of refresh and access tokens
-		ts, createErr := auth.CreateToken(user.Id, user.Level)
+		ts, createErr := auth.CreateToken(user.GetId(), user.GetLevel())
 		if createErr != nil {
 			c.JSON(http.StatusForbidden, createErr.Error())
 			return

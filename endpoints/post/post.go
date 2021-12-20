@@ -1,8 +1,8 @@
 package post
 
 import (
-	"friday/config/models"
 	"friday/config/utils"
+	"friday/models"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
