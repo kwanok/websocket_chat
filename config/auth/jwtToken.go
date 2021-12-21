@@ -8,7 +8,6 @@ import (
 	"github.com/twinj/uuid"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -26,7 +25,7 @@ type TokenDetails struct {
 
 type AccessDetails struct {
 	AccessUuid string
-	UserId     uint
+	UserId     string
 }
 
 //CreateAuth 레디스에 유저정보 저장
@@ -135,26 +134,22 @@ func ExtractTokenMetadata(r *http.Request) (*AccessDetails, error) {
 		if !ok {
 			return nil, err
 		}
-		userId, err := strconv.ParseUint(fmt.Sprintf("%.f", claims["user_id"]), 10, 64)
-		if err != nil {
-			return nil, err
-		}
 		return &AccessDetails{
 			AccessUuid: accessUuid,
-			UserId:     uint(userId),
+			UserId:     fmt.Sprintf("%.f", claims["user_id"]),
 		}, nil
 	}
 	return nil, err
 }
 
 //FetchAuth 레디스에 있는 userId 를 가져옴
-func FetchAuth(authD *AccessDetails) (uint64, error) {
+func FetchAuth(authD *AccessDetails) (string, error) {
 	userid, err := config.JwtRedis.Get(ctx, authD.AccessUuid).Result()
 	if err != nil {
-		return 0, err
+		return userid, err
 	}
-	userID, _ := strconv.ParseUint(userid, 10, 64)
-	return userID, nil
+
+	return userid, nil
 }
 
 //DeleteAuth 레디스에 있는 uuid 데이터 삭제

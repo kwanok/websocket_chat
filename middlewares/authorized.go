@@ -19,20 +19,20 @@ func IsAuthorized(c *gin.Context) {
 	}
 
 	tokenAuth, err := auth.ExtractTokenMetadata(c.Request)
+	fmt.Println("tokenAuth: ", tokenAuth)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, "unauthorized")
 		c.Abort()
 		return
 	}
-	fmt.Println(tokenAuth)
 
 	userId, err := auth.FetchAuth(tokenAuth)
+	fmt.Println("userId: ", userId)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, "unauthorized")
 		c.Abort()
 		return
 	}
-	fmt.Println(userId)
 
 	c.Next()
 }

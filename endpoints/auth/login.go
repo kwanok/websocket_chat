@@ -1,10 +1,12 @@
 package auth
 
 import (
+	"friday/config"
 	"friday/config/auth"
 	"friday/config/utils"
 	"friday/repository"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 )
 
@@ -17,18 +19,24 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	user, err := repository.GetUserByEmail(json.Email)
-	utils.FatalError{Error: err}.Handle()
+	userRepository := repository.UserRepository{Db: config.Sqlite3}
+	user := userRepository.FindClientByEmail(json.Email)
+	log.Println(user)
+	if user == nil {
+		c.JSON(http.StatusNotFound, "Not found")
+		c.Abort()
+		return
+	}
 
-	if user.Email != json.Email || !auth.CompareHash(user.Password, json.Password) {
+	if user.GetEmail() != json.Email || !auth.CompareHash(user.GetPassword(), json.Password) {
 		c.JSON(http.StatusUnauthorized, "Please provide valid login details")
 		return
 	}
 
-	token, err := auth.CreateToken(user.Id, user.Level)
+	token, err := auth.CreateToken(user.GetId(), user.GetLevel())
 	utils.HttpError{Error: err, Context: c, Status: http.StatusUnprocessableEntity}.Handle()
 
-	saveErr := auth.CreateAuth(user.Id, token)
+	saveErr := auth.CreateAuth(user.GetId(), token)
 	if saveErr != nil {
 		c.JSON(http.StatusUnprocessableEntity, saveErr.Error())
 		return

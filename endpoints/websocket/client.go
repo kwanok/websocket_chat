@@ -18,10 +18,17 @@ type Client struct {
 	send   chan []byte
 }
 
-func newClient(conn *websocket.Conn, server *Server, name string) *Client {
+func newClient(conn *websocket.Conn, server *Server, id string) *Client {
+	userId, err := uuid.Parse(id)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	user := server.userRepository.FindClientById(id)
+
 	return &Client{
-		ID:     uuid.New(),
-		Name:   name,
+		ID:     userId,
+		Name:   user.GetName(),
 		conn:   conn,
 		server: server,
 		rooms:  make(map[*Room]bool),

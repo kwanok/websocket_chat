@@ -7,12 +7,12 @@ import (
 )
 
 func Logout(c *gin.Context) {
-	au, err := auth.ExtractTokenMetadata(c.Request)
+	accessDetail, err := auth.ExtractTokenMetadata(c.Request)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, "unauthorized")
 		return
 	}
-	deleted, delErr := auth.DeleteAuth(au.AccessUuid)
+	deleted, delErr := auth.DeleteAuth(accessDetail.AccessUuid)
 	if delErr != nil || deleted == 0 {
 		c.JSON(http.StatusUnauthorized, "unauthorized")
 		return

@@ -6,6 +6,7 @@ import (
 	"friday/config/auth"
 	"friday/config/utils"
 	"friday/models"
+	"github.com/google/uuid"
 	"log"
 )
 
@@ -73,12 +74,31 @@ func (repo *UserRepository) FindChatClientById(ID string) models.ChatClient {
 	}
 
 	return &user
-
 }
 
 func (repo *UserRepository) FindClientById(Id string) models.Client {
 	row := repo.Db.QueryRow("SELECT id, level, email, password, name FROM users where id = ? LIMIT 1", Id)
 
+	var user User
+
+	if err := row.Scan(
+		&user.Id,
+		&user.Level,
+		&user.Email,
+		&user.Password,
+		&user.Name,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return nil
+		}
+		panic(err)
+	}
+
+	return &user
+}
+
+func (repo *UserRepository) FindClientByEmail(email string) models.Client {
+	row := repo.Db.QueryRow("SELECT id, level, email, password, name FROM users where email = ? LIMIT 1", email)
 	var user User
 
 	if err := row.Scan(
@@ -113,6 +133,14 @@ func (repo *UserRepository) GetAllUsers() []models.ChatClient {
 	}
 
 	return users
+}
+
+func (repo *UserRepository) AddClient(user User) {
+	stmt, err := repo.Db.Prepare("INSERT INTO users(id, name, level, email, password) values(?,?,?,?,?)")
+	checkErr(err)
+
+	_, err = stmt.Exec(uuid.New(), user.GetName(), user.GetLevel(), user.GetEmail(), auth.Hash(user.GetPassword()))
+	checkErr(err)
 }
 
 func (repo *UserRepository) GetAllClients() []models.Client {

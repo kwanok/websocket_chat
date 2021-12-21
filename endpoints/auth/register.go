@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"friday/config/utils"
+	"friday/config"
 	"friday/models"
 	"friday/repository"
 	"github.com/gin-gonic/gin"
@@ -11,6 +11,7 @@ import (
 type User struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	Name     string `json:"name"`
 }
 
 func Register(c *gin.Context) {
@@ -22,8 +23,13 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	err := repository.CreateUser(json.Email, models.LevelUser, json.Password, "노과농")
-	utils.FatalError{Error: err}.Handle()
+	roomRepository := repository.UserRepository{Db: config.Sqlite3}
+	roomRepository.AddClient(repository.User{
+		Email:    json.Email,
+		Level:    models.LevelUser,
+		Password: json.Password,
+		Name:     json.Name,
+	})
 
 	c.JSON(http.StatusOK, json)
 }

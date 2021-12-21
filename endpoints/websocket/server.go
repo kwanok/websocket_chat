@@ -47,20 +47,14 @@ func NewServer(
 	return server
 }
 
-func Handler(server *Server, w http.ResponseWriter, r *http.Request) {
-	name, ok := r.URL.Query()["name"]
-	if !ok || len(name[0]) < 1 {
-		log.Println("Url Param 'name' is missing")
-		return
-	}
-
+func Handler(server *Server, w http.ResponseWriter, r *http.Request, userId string) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	client := newClient(conn, server, name[0])
+	client := newClient(conn, server, userId)
 
 	go client.writePump()
 	go client.readPump()
@@ -87,7 +81,7 @@ func (server *Server) Run() {
 //registerClient 서버에 클라이언트를 등록
 func (server *Server) registerClient(client *Client) {
 	// 유저를 db에 저장
-	server.userRepository.AddUser(client)
+	// server.userRepository.AddUser(client)
 
 	server.publishClientJoined(client)
 
