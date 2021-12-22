@@ -2,15 +2,17 @@ package routes
 
 import (
 	"database/sql"
-	"friday/config/repository"
+	authConfig "friday/config/auth"
 	"friday/config/utils"
 	"friday/endpoints/admin"
 	"friday/endpoints/auth"
 	"friday/endpoints/post"
 	"friday/endpoints/websocket"
 	"friday/middlewares"
+	"friday/repository"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"net/http"
 )
 
 func Routes(r *gin.Engine, sqlite *sql.DB) {
@@ -24,10 +26,17 @@ func Routes(r *gin.Engine, sqlite *sql.DB) {
 		c.String(200, "We got Gin")
 	})
 
+	r.GET("/users", admin.GetUsers)
+
 	adminGroup := r.Group("/admin")
 	adminGroup.Use(middlewares.IsAuthorized)
 	{
 		adminGroup.GET("/users", admin.GetUsers)
+		adminGroup.GET("/websockets", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{
+				"ws": wsServer,
+			})
+		})
 	}
 
 	authGroup := r.Group("/auth")
@@ -40,7 +49,20 @@ func Routes(r *gin.Engine, sqlite *sql.DB) {
 
 	r.GET("posts", post.GetPosts)
 
-	r.GET("/websocket", func(c *gin.Context) {
-		websocket.Handler(wsServer, c.Writer, c.Request)
+	r.GET("/websocket", middlewares.IsAuthorized, func(c *gin.Context) {
+		accessDetail, err := authConfig.ExtractTokenMetadata(c.Request)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, "unauthorized")
+			return
+		}
+
+		userId, err := authConfig.FetchAuth(accessDetail)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, "unauthorized")
+			return
+		}
+
+		websocket.Handler(wsServer, c.Writer, c.Request, userId)
 	})
+
 }
