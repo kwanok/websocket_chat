@@ -2,7 +2,7 @@ POST http://localhost:8080/auth/register
 Content-Type: application/json
 
 {
-  "email": "aaaa@gmail.com",
+  "email": "cloq@kakao.com",
   "password": "rhksdhr2!",
   "name": "kwanok"
 }
