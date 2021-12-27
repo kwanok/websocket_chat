@@ -135,4 +135,4 @@ Temporary Items
 
 .env
 
-chat.db
+*.db
