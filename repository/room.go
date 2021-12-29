@@ -51,9 +51,3 @@ func (repo *RoomRepository) FindRoomByName(name string) models.Room {
 	return &room
 
 }
-
-func checkErr(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
