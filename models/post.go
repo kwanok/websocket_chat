@@ -1,8 +1,8 @@
 package models
 
 import (
-	"friday/config"
-	"friday/config/utils"
+	"github.com/kwanok/friday/config"
+	"github.com/kwanok/friday/config/utils"
 )
 
 type Post struct {

@@ -2,9 +2,9 @@ package repository
 
 import (
 	"database/sql"
-	"friday/config/auth"
-	"friday/models"
 	"github.com/google/uuid"
+	"github.com/kwanok/friday/config/auth"
+	"github.com/kwanok/friday/models"
 	"log"
 )
 

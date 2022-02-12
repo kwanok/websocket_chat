@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"friday/config/auth"
 	"github.com/gin-gonic/gin"
+	"github.com/kwanok/friday/config/auth"
 	"net/http"
 )
 

@@ -2,11 +2,11 @@ package auth
 
 import (
 	"fmt"
-	"friday/config"
-	"friday/config/auth"
-	"friday/repository"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/kwanok/friday/config"
+	"github.com/kwanok/friday/config/auth"
+	"github.com/kwanok/friday/repository"
 	"net/http"
 	"os"
 )

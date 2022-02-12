@@ -3,8 +3,8 @@ package websocket
 import (
 	"context"
 	"fmt"
-	"friday/config"
 	"github.com/google/uuid"
+	"github.com/kwanok/friday/config"
 	"log"
 )
 

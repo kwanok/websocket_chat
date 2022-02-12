@@ -1,9 +1,9 @@
 package admin
 
 import (
-	"friday/config"
-	"friday/repository"
 	"github.com/gin-gonic/gin"
+	"github.com/kwanok/friday/config"
+	"github.com/kwanok/friday/repository"
 	"log"
 	"net/http"
 )

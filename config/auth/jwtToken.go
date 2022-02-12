@@ -3,8 +3,8 @@ package auth
 import (
 	"context"
 	"fmt"
-	"friday/config"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/kwanok/friday/config"
 	"github.com/twinj/uuid"
 	"net/http"
 	"os"

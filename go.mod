@@ -1,4 +1,4 @@
-module friday
+module github.com/kwanok/friday
 
 go 1.17
 

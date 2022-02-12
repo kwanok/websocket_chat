@@ -2,7 +2,7 @@ package websocket
 
 import (
 	"encoding/json"
-	"friday/models"
+	"github.com/kwanok/friday/models"
 	"log"
 )
 

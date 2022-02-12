@@ -2,10 +2,10 @@ package config
 
 import (
 	"database/sql"
-	"friday/config/utils"
 	"github.com/go-redis/redis/v8"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
+	"github.com/kwanok/friday/config/utils"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"os"

@@ -2,7 +2,7 @@ package repository
 
 import (
 	"database/sql"
-	"friday/models"
+	"github.com/kwanok/friday/models"
 )
 
 type Room struct {

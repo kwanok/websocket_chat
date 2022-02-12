@@ -1,10 +1,10 @@
 package auth
 
 import (
-	"friday/config"
-	"friday/models"
-	"friday/repository"
 	"github.com/gin-gonic/gin"
+	"github.com/kwanok/friday/config"
+	"github.com/kwanok/friday/models"
+	"github.com/kwanok/friday/repository"
 	"net/http"
 )
 

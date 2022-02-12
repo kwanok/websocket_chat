@@ -2,10 +2,10 @@ package websocket
 
 import (
 	"encoding/json"
-	"friday/config"
-	"friday/models"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"github.com/kwanok/friday/config"
+	"github.com/kwanok/friday/models"
 	"log"
 )
 

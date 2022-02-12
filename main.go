@@ -2,10 +2,10 @@ package main
 
 import (
 	"database/sql"
-	"friday/config"
-	"friday/config/utils"
-	"friday/routes"
 	"github.com/gin-gonic/gin"
+	"github.com/kwanok/friday/config"
+	"github.com/kwanok/friday/config/utils"
+	"github.com/kwanok/friday/routes"
 	"log"
 	"os"
 )

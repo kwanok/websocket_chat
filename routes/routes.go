@@ -2,16 +2,16 @@ package routes
 
 import (
 	"database/sql"
-	authConfig "friday/config/auth"
-	"friday/config/utils"
-	"friday/endpoints/admin"
-	"friday/endpoints/auth"
-	"friday/endpoints/post"
-	"friday/endpoints/websocket"
-	"friday/middlewares"
-	"friday/repository"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	authConfig "github.com/kwanok/friday/config/auth"
+	"github.com/kwanok/friday/config/utils"
+	"github.com/kwanok/friday/endpoints/admin"
+	"github.com/kwanok/friday/endpoints/auth"
+	"github.com/kwanok/friday/endpoints/post"
+	"github.com/kwanok/friday/endpoints/websocket"
+	"github.com/kwanok/friday/middlewares"
+	"github.com/kwanok/friday/repository"
 	"net/http"
 )
 
