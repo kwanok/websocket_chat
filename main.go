@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"github.com/gin-gonic/gin"
 	"github.com/kwanok/friday/config"
-	"github.com/kwanok/friday/config/utils"
 	"github.com/kwanok/friday/routes"
 	"log"
 	"os"
@@ -19,15 +18,16 @@ func main() {
 
 	defer func(DBCon *sql.DB) {
 		err := DBCon.Close()
-		utils.FatalError{Error: err}.Handle()
+		if err != nil {
+			log.Fatal(err)
+		}
 
 	}(config.DBCon)
 
-	sqlite := config.InitSqlite3()
-	defer sqlite.Close()
-
-	routes.Routes(r, sqlite)
+	routes.Routes(r, config.DBCon)
 
 	err := r.Run()
-	utils.FatalError{Error: err}.Handle()
+	if err != nil {
+		log.Fatal(err)
+	}
 }

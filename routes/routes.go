@@ -5,21 +5,22 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	authConfig "github.com/kwanok/friday/config/auth"
-	"github.com/kwanok/friday/config/utils"
 	"github.com/kwanok/friday/endpoints/admin"
 	"github.com/kwanok/friday/endpoints/auth"
-	"github.com/kwanok/friday/endpoints/post"
 	"github.com/kwanok/friday/endpoints/websocket"
 	"github.com/kwanok/friday/middlewares"
 	"github.com/kwanok/friday/repository"
+	"log"
 	"net/http"
 )
 
-func Routes(r *gin.Engine, sqlite *sql.DB) {
+func Routes(r *gin.Engine, db *sql.DB) {
 	err := godotenv.Load(".env")
-	utils.FatalError{Error: err}.Handle()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	wsServer := websocket.NewServer(&repository.RoomRepository{Db: sqlite}, &repository.UserRepository{Db: sqlite})
+	wsServer := websocket.NewServer(&repository.RoomRepository{Db: db}, &repository.UserRepository{Db: db})
 	go wsServer.Run()
 
 	r.GET("/", func(c *gin.Context) {
@@ -28,17 +29,6 @@ func Routes(r *gin.Engine, sqlite *sql.DB) {
 
 	r.GET("/users", admin.GetUsers)
 
-	adminGroup := r.Group("/admin")
-	adminGroup.Use(middlewares.IsAuthorized)
-	{
-		adminGroup.GET("/users", admin.GetUsers)
-		adminGroup.GET("/websockets", func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{
-				"ws": wsServer,
-			})
-		})
-	}
-
 	authGroup := r.Group("/auth")
 	{
 		authGroup.POST("/register", auth.Register)
@@ -46,8 +36,6 @@ func Routes(r *gin.Engine, sqlite *sql.DB) {
 		authGroup.POST("/logout", middlewares.IsAuthorized, auth.Logout)
 		authGroup.POST("/refresh", auth.Refresh)
 	}
-
-	r.GET("posts", post.GetPosts)
 
 	r.GET("/websocket", middlewares.IsAuthorized, func(c *gin.Context) {
 		accessDetail, err := authConfig.ExtractTokenMetadata(c.Request)

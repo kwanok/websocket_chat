@@ -1,4 +1,0 @@
-GET http://localhost:8080/admin/users
-Accept: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NfdXVpZCI6IjFlMDZmMmJhLTk5YmEtNGQ5NC04ZGE1LTgyNWY4Nzc2ZDhkNiIsImF1dGhvcml6ZWQiOnRydWUsImV4cCI6MTYzNzkxMDYyOCwidXNlcl9pZCI6NCwidXNlcl9sZXZlbCI6MX0.BbiNEGq0jWzTbwpJ0Dyuj_Dxk8LfTUHJp-7uKJVnlvI
-###

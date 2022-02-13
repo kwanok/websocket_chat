@@ -9,7 +9,7 @@ import (
 )
 
 func GetUsers(c *gin.Context) {
-	userRepository := repository.UserRepository{Db: config.Sqlite3}
+	userRepository := repository.UserRepository{Db: config.DBCon}
 	users := userRepository.GetAllClients()
 
 	log.Println("유저: ", users)

@@ -1,7 +1,0 @@
-POST http://localhost:8080/auth/logout
-Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NfdXVpZCI6IjU1MzI5Y2ZmLWI2MDAtNDQyMS05YzM3LTE2MzBlZjk4Zjg1ZiIsImF1dGhvcml6ZWQiOnRydWUsImV4cCI6MTYzNzkxNTQ4OSwidXNlcl9pZCI6NCwidXNlcl9sZXZlbCI6MX0.kyGdDqVum3BtgmhvjQ4B7tCViPYQJPWTGXoQFaLu2Dk
-
-{}
-
-###

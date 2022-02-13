@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kwanok/friday/config"
 	"github.com/kwanok/friday/config/auth"
-	"github.com/kwanok/friday/config/utils"
 	"github.com/kwanok/friday/repository"
 	"log"
 	"net/http"
@@ -19,7 +18,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	userRepository := repository.UserRepository{Db: config.Sqlite3}
+	userRepository := repository.UserRepository{Db: config.DBCon}
 	user := userRepository.FindClientByEmail(json.Email)
 	log.Println(user)
 	if user == nil {
@@ -34,7 +33,10 @@ func Login(c *gin.Context) {
 	}
 
 	token, err := auth.CreateToken(user.GetId(), user.GetLevel())
-	utils.HttpError{Error: err, Context: c, Status: http.StatusUnprocessableEntity}.Handle()
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, "StatusUnprocessableEntity")
+		return
+	}
 
 	saveErr := auth.CreateAuth(user.GetId(), token)
 	if saveErr != nil {

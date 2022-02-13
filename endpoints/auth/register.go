@@ -23,7 +23,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	roomRepository := repository.UserRepository{Db: config.Sqlite3}
+	roomRepository := repository.UserRepository{Db: config.DBCon}
 	roomRepository.AddClient(repository.User{
 		Email:    json.Email,
 		Level:    models.LevelUser,

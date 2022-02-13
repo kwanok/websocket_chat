@@ -5,7 +5,6 @@ import (
 	"github.com/go-redis/redis/v8"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
-	"github.com/kwanok/friday/config/utils"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"os"
@@ -14,7 +13,6 @@ import (
 var DBCon *sql.DB
 var JwtRedis *redis.Client
 var PubSubRedis *redis.Client
-var Sqlite3 *sql.DB
 
 type DatabaseInfo struct {
 	Name     string
@@ -29,7 +27,9 @@ func getSourceName(db DatabaseInfo) string {
 
 func InitDB() string {
 	err := godotenv.Load(".env")
-	utils.FatalError{Error: err}.Handle()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	go initMysql()
 	go initRedis()
@@ -56,46 +56,6 @@ func initRedis() {
 	})
 }
 
-func InitSqlite3() *sql.DB {
-	db, err := sql.Open("sqlite3", "./chat.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	sqlStmt := `	
-	create table if not exists users(
-    	id    	   varchar(255) not null primary key,
-    	level      integer default 1 not null,
-    	name       varchar(255) not null,
-    	email      varchar(255) not null,
-    	password   varchar(255),
-    	created_at datetime default CURRENT_TIMESTAMP,
-    	updated_at datetime default CURRENT_TIMESTAMP
-	);
-	`
-
-	_, err = db.Exec(sqlStmt)
-	if err != nil {
-		log.Fatalf("%q: %s\n", err, sqlStmt)
-	}
-
-	sqlStmt = `	
-	CREATE TABLE IF NOT EXISTS rooms (
-		id VARCHAR(255) NOT NULL PRIMARY KEY,
-		name VARCHAR(255) NOT NULL,
-		private TINYINT NULL
-	);
-	`
-	_, err = db.Exec(sqlStmt)
-	if err != nil {
-		log.Fatalf("%q: %s\n", err, sqlStmt)
-	}
-
-	Sqlite3 = db
-
-	return db
-}
-
 func initMysql() {
 	databaseInfo := DatabaseInfo{
 		os.Getenv("DB_NAME"),
@@ -105,7 +65,9 @@ func initMysql() {
 	}
 
 	db, err := sql.Open("mysql", getSourceName(databaseInfo))
-	utils.FatalError{Error: err}.Handle()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	DBCon = db
 }

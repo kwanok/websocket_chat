@@ -118,10 +118,10 @@ func (repo *UserRepository) FindClientByEmail(email string) models.Client {
 func (repo *UserRepository) GetAllUsers() []models.ChatClient {
 
 	rows, err := repo.Db.Query("SELECT id, name FROM users")
-
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	var users []models.ChatClient
 	defer rows.Close()
 	for rows.Next() {

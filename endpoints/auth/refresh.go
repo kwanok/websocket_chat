@@ -46,7 +46,7 @@ func Refresh(c *gin.Context) {
 			return
 		}
 		userId, ok := claims["user_id"].(string)
-		userRepository := repository.UserRepository{Db: config.Sqlite3}
+		userRepository := repository.UserRepository{Db: config.DBCon}
 		user := userRepository.FindClientById(userId)
 		if err != nil {
 			c.JSON(http.StatusUnprocessableEntity, "Error occurred")
