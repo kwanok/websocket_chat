@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: friday-demo
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: friday-demo
+  replicas: 1
+  revisionHistoryLimit: 1
+  template:
+    metadata:
+      labels:
+        app: friday-demo
+    spec:
+      containers:
+        - name: friday-demo
+          image: ghcr.io/kwanok/friday-server:latest
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: 500m
+              memory: 200Mi
+          ports:
+            - containerPort: 8080
+          env:
+            - name: GIN_MODE
+              value: release
+            - name: DB_NAME
+              value: friday_main
+            - name: DB_HOST
+              value: friday-rds.ctjwczjffk2q.ap-northeast-2.rds.amazonaws.com
+            - name: DB_PASSWORD
+              value: rhksdhr2!
+            - name: DB_ROOT
+              value: admin
+            - name: ACCESS_SECRET
+              value: PuzOU@ueVLD|
+            - name: REFRESH_SECRET
+              value: Y*s6h0Hcc4[QghT
+            - name: REDIS_DSN
+              value: localhost:6379

@@ -12,12 +12,15 @@ import (
 	"github.com/kwanok/friday/repository"
 	"log"
 	"net/http"
+	"os"
 )
 
 func Routes(r *gin.Engine, db *sql.DB) {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatal(err)
+	if os.Getenv("GIN_MODE") != "release" {
+		err := godotenv.Load(".env")
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	wsServer := websocket.NewServer(&repository.RoomRepository{Db: db}, &repository.UserRepository{Db: db})

@@ -26,9 +26,11 @@ func getSourceName(db DatabaseInfo) string {
 }
 
 func InitDB() string {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatal(err)
+	if os.Getenv("GIN_MODE") != "release" {
+		err := godotenv.Load(".env")
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	go initMysql()

@@ -140,3 +140,5 @@ Temporary Items
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
+
+k8s/configMap.yaml

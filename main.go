@@ -26,7 +26,7 @@ func main() {
 
 	routes.Routes(r, config.DBCon)
 
-	err := r.Run()
+	err := r.Run(":80")
 	if err != nil {
 		log.Fatal(err)
 	}
