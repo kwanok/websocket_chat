@@ -24,20 +24,3 @@ spec:
               memory: 200Mi
           ports:
             - containerPort: 8080
-          env:
-            - name: GIN_MODE
-              value: release
-            - name: DB_NAME
-              value: friday_main
-            - name: DB_HOST
-              value: friday-rds.ctjwczjffk2q.ap-northeast-2.rds.amazonaws.com
-            - name: DB_PASSWORD
-              value: rhksdhr2!
-            - name: DB_ROOT
-              value: admin
-            - name: ACCESS_SECRET
-              value: PuzOU@ueVLD|
-            - name: REFRESH_SECRET
-              value: Y*s6h0Hcc4[QghT
-            - name: REDIS_DSN
-              value: localhost:6379
